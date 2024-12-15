@@ -604,10 +604,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="hypothesis" class="level2">
 <h2 class="anchored" data-anchor-id="hypothesis">Hypothesis</h2>
-<p>After the exploratory analysis, my hypothesis is that <strong>the visitor count of a world’s fair is significantly influenced by the cost and area of the world’s fair, and also by the number of attending countries at the fair</strong>.</p>
+<p>My hypothesis is that <strong>the visitor count of a world’s fair is significantly influenced by the cost and area of the world’s fair, and also by the number of attending countries at the fair</strong>.</p>
 </section>
-<section id="model-building" class="level2">
-<h2 class="anchored" data-anchor-id="model-building">Model building</h2>
+<section id="first-model-building" class="level2">
+<h2 class="anchored" data-anchor-id="first-model-building">First Model building</h2>
 <p>To test my hypothesis I created a linear regression model. My response variable is the visitor count (<em>visitors</em>) and my predictor variables are the cost (<em>cost</em>), area of the fair (<em>area</em>) and the number of attending countries (<em>attending_countries</em>).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Building the linear model for predicting the visitor count</span></span>
@@ -658,11 +658,11 @@ F-statistic: 13.19 on 3 and 31 DF,  p-value: 1.009e-05</code></pre>
 # ℹ 1 more variable: standardized_beta &lt;dbl&gt;</code></pre>
 </div>
 </div>
-<p>The linear model shows that only the area is a significant predictor for the visitor count (<em>p</em> = 0.000226). The cost (<em>p</em> = 0.09) and the number of attending countries (<em>p</em> = 0.74) are seemingly not significant predictors. According to the multiple R-squared (0.5608), approximately 56% of the variation in the dependent variable is explained by the model. The residual standard error is 12.4, and the overall model is statistically significant (<em>df</em> = 31, <em>adj. R-squared</em> = 0.5183, <em>F</em> = 13.19, <em>p</em> = 1.009e-05).</p>
+<p>The linear model shows that only the area is a significant predictor for the visitor count (<em>p</em> = 0.000226). The cost (<em>p</em> = 0.09) and the number of attending countries (<em>p</em> = 0.74) are seemingly not significant predictors. According to the multiple R-squared (0.5608), approximately 56% of the variation in the dependent variable is explained by the model. The residual standard error is 12.4, and the overall model is statistically significant (<em>dfs</em> = 3, 31, <em>adj. R-squared</em> = 0.5183, <em>F</em> = 13.19, <em>p</em> = 1.009e-05).</p>
 <p>The equation for the model: <em>visitors</em> = 6.928 + 0.00665 * <em>cost</em> + 0.07953 * <em>area</em> − 0.03734 * <em>attending_countries</em></p>
 </section>
-<section id="model-diagnostics" class="level2">
-<h2 class="anchored" data-anchor-id="model-diagnostics">Model Diagnostics</h2>
+<section id="first-model-diagnostics" class="level2">
+<h2 class="anchored" data-anchor-id="first-model-diagnostics">First Model Diagnostics</h2>
 <section id="checking-for-influential-observations" class="level3">
 <h3 class="anchored" data-anchor-id="checking-for-influential-observations">Checking for Influential Observations</h3>
 <div class="cell">
@@ -710,7 +710,7 @@ F-statistic: 13.19 on 3 and 31 DF,  p-value: 1.009e-05</code></pre>
 </div>
 </div>
 </div>
-<p>In the plot we can see, that only 4 observations are considered inlfuential by their Cook’s distance.</p>
+<p>In the plot we can see, that only 4 observations are considered influential by their Cook’s distance.</p>
 </section>
 <section id="normality-check" class="level3">
 <h3 class="anchored" data-anchor-id="normality-check">Normality Check</h3>
@@ -794,7 +794,7 @@ BP = 10.697, df = 3, p-value = 0.01348</code></pre>
 <section id="robust-standard-error-adjustment" class="level3">
 <h3 class="anchored" data-anchor-id="robust-standard-error-adjustment">Robust Standard Error Adjustment</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust standard error adjustment, to account for the significant heteroscedasticty</span></span>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust standard error adjustment, to account for the heteroscedasticty</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>robust_se <span class="ot">&lt;-</span> <span class="fu">vcovHC</span>(linear_model, <span class="at">type =</span> <span class="st">"HC3"</span>)</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(linear_model, <span class="at">vcov =</span> robust_se)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -813,10 +813,231 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p>The area is still a significant predictor (<em>p</em> = 0.04434) after accounting for heteroskedasticity, therefore it has a meaningful association with the visitor count, however the cost (<em>p</em> = 0.26262) and the number of attending countries (<em>p</em> = 0.81256) remained insignificant predictors.</p>
 </section>
 </section>
+<section id="second-model-building" class="level2">
+<h2 class="anchored" data-anchor-id="second-model-building">Second Model Building</h2>
+<p>To further investigate, what could influence the visitor count, I created a second model, where the response variable is the visitor count (<em>visitors</em>) and the predictor variables are the area (<em>area</em>) and the category of the fair (<em>category</em>). The latter is a categorical dichotomous variable, which could be influential to the visitor count.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Building the second linear model for predicting the visitor count</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>second_linear_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(visitors <span class="sc">~</span>  area <span class="sc">+</span> category, <span class="at">data =</span> data)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(second_linear_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = visitors ~ area + category, data = data)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-35.405  -6.494  -2.460   7.566  32.542 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)         7.60983    5.11586   1.487    0.147    
+area                0.09326    0.01861   5.010 1.93e-05 ***
+categoryWorld Expo -0.54283    6.07016  -0.089    0.929    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 13.39 on 32 degrees of freedom
+Multiple R-squared:  0.4712,    Adjusted R-squared:  0.4381 
+F-statistic: 14.26 on 2 and 32 DF,  p-value: 3.74e-05</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Tidy coefficients and add confidence intervals</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>second_linear_model_stats <span class="ot">&lt;-</span> <span class="fu">tidy</span>(second_linear_model) <span class="sc">|&gt;</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">conf.low =</span> <span class="fu">confint</span>(second_linear_model)[, <span class="dv">1</span>],</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">conf.high =</span> <span class="fu">confint</span>(second_linear_model)[, <span class="dv">2</span>]</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Getting standardized coefficients</span></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>second_linear_model_stats<span class="sc">$</span>standardized_beta <span class="ot">&lt;-</span> <span class="fu">lm.beta</span>(second_linear_model)<span class="sc">$</span>standardized.coefficients</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>second_linear_model_stats</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 8
+  term               estimate std.error statistic   p.value conf.low conf.high
+  &lt;chr&gt;                 &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)          7.61      5.12      1.49   0.147      -2.81      18.0  
+2 area                 0.0933    0.0186    5.01   0.0000193   0.0553     0.131
+3 categoryWorld Expo  -0.543     6.07     -0.0894 0.929     -12.9       11.8  
+# ℹ 1 more variable: standardized_beta &lt;dbl&gt;</code></pre>
+</div>
+</div>
+<p>In this model the area is still the only significant predictor for the visitor count (<em>p</em> = 1.93e-05). The category as a predictor, does not seem to be significant (<em>p</em> = 0.929). The multiple R-squared (0.4712) shows that approximately 47% of the variation in the dependent variable is explained by the model. The residual standard error is 13.39, and the overall model is statistically significant (<em>dfs</em> = 2, 32, <em>adj. R-squared</em> = 0.4381, <em>F</em> = 14.26, <em>p</em> = 3.74e-05).</p>
+<p>The equation for the model: <em>visitors</em> = 7.60983 + 0.09326 * <em>area</em> - 0.54283 * <em>category(World Expo)</em></p>
+</section>
+<section id="second-model-diagnostics" class="level2">
+<h2 class="anchored" data-anchor-id="second-model-diagnostics">Second Model Diagnostics</h2>
+<section id="checking-for-influential-observations-1" class="level3">
+<h3 class="anchored" data-anchor-id="checking-for-influential-observations-1">Checking for Influential Observations</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Augmenting the model</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>second_linear_model_augmented <span class="ot">&lt;-</span> second_linear_model <span class="sc">|&gt;</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">augment</span>() <span class="sc">|&gt;</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">dlc_id =</span> data<span class="sc">$</span>dlc_id)</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Setting the Cook's threshold</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>second_cooks_threshold <span class="ot">&lt;-</span> <span class="dv">4</span> <span class="sc">/</span> <span class="fu">nrow</span>(second_linear_model_augmented)</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Getting the influential observations based on the Cook's distance</span></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>second_influential_points <span class="ot">&lt;-</span>second_linear_model_augmented <span class="sc">|&gt;</span></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(.cooksd <span class="sc">&gt;</span> second_cooks_threshold)</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>second_influential_points</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 9
+  visitors  area category   .fitted .resid   .hat .sigma .cooksd .std.resid
+     &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;        &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;
+1     19.7  515  World Expo    55.1  -35.4 0.282    11.3   1.28       -3.12
+2     64.2  330. World Expo    37.8   26.4 0.0930   12.7   0.146       2.07
+3     73.1  523  World Expo    55.8   17.2 0.294    13.1   0.325       1.53</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting the complex model, highlighting the influential observations</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data =</span> second_linear_model_augmented, <span class="fu">aes</span>(<span class="at">x =</span> .fitted, <span class="at">y =</span> visitors)) <span class="sc">+</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">color =</span> <span class="st">"green"</span>, <span class="at">shape =</span> <span class="dv">21</span>, <span class="at">fill =</span> <span class="st">"green"</span>) <span class="sc">+</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">se =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> second_influential_points, <span class="fu">aes</span>(<span class="at">x =</span> .fitted, <span class="at">y =</span> visitors), </span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">color =</span> <span class="st">"black"</span>, <span class="at">shape =</span> <span class="dv">21</span>, <span class="at">fill =</span> <span class="st">"black"</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span> </span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">title =</span> <span class="st">"Regression plot for the second linear model with highlighted influential observations"</span>,</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">x =</span> <span class="st">"Fitted Values"</span>,</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">y =</span> <span class="st">"Visitors"</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>3 observations can be considered influential by their Cook’s distance, as can be seen on the plot above.</p>
+</section>
+<section id="normality-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="normality-check-1">Normality Check</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Getting the residuals for the second linear model</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>second_linear_model_residuals <span class="ot">&lt;-</span> second_linear_model_augmented<span class="sc">$</span>.resid</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Shapiro-Wilk test for normality check</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a><span class="fu">shapiro.test</span>(second_linear_model_residuals)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Shapiro-Wilk normality test
+
+data:  second_linear_model_residuals
+W = 0.94531, p-value = 0.08131</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Normal Q-Q plot for the second linear model</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">qqnorm</span>(second_linear_model_residuals, <span class="at">main =</span> <span class="st">"Normal Q-Q plot for the second linear model residuals"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Histogram for the second linear model</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">hist</span>(second_linear_model_residuals, <span class="at">probability =</span> <span class="cn">TRUE</span>, <span class="at">main =</span> <span class="st">"Histogram of the second linear model residuals"</span>)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="fu">curve</span>(<span class="fu">dnorm</span>(x, <span class="at">mean =</span> <span class="fu">mean</span>(second_linear_model_residuals), <span class="at">sd =</span> <span class="fu">sd</span>(second_linear_model_residuals)), <span class="at">add =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-16-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The Shapiro-Wilk test (<em>W</em> = 0.94531, <em>p</em> = 0.08131) were not significant for the residuals of the second linear model. This suggests that there is no significant deviation from the normal distribution. The normality assumption holds.</p>
+</section>
+<section id="linearity-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="linearity-check-1">Linearity Check</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RESET test for linearity check</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">resettest</span>(second_linear_model, <span class="at">power =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    RESET test
+
+data:  second_linear_model
+RESET = 0.65252, df1 = 2, df2 = 30, p-value = 0.528</code></pre>
+</div>
+</div>
+<p>The results of the Ramsey Regression Equation Specification Error Test (RESET) (<em>RESET</em> = 0.65252, <em>df1</em> = 2, <em>df2</em> = 30, <em>p</em> = 0.528) suggest that the linearity assumption holds for the model.</p>
+</section>
+<section id="homoscedasticty-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="homoscedasticty-check-1">Homoscedasticty Check</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Breusch-Pagan test for homoscedasticty check</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bptest</span>(second_linear_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    studentized Breusch-Pagan test
+
+data:  second_linear_model
+BP = 12.238, df = 2, p-value = 0.002201</code></pre>
+</div>
+</div>
+<p>For checking the homoscedasticty assumption, I used a Breusch-Pagan test (<em>BP</em> = 12.238, <em>df</em> = 2, <em>p</em> = 0.002201). The result suggests that there is heteroscedasticty in the model. For this model as well, I used robust standard error adjustment, to account for the violation of the homoscedasticty assumption.</p>
+</section>
+<section id="multicollinearity-check-1" class="level3">
+<h3 class="anchored" data-anchor-id="multicollinearity-check-1">Multicollinearity Check</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variance Inflation Factors for multicollinearity check</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">vif</span>(second_linear_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    area category 
+ 1.15025  1.15025 </code></pre>
+</div>
+</div>
+<p>The results of the Variance Inflation Factor (VIF) analysis show that none of the two variables have a concerning amount of multicollinearity, since all VIF values are less than 5 (area: <em>VIF</em> = 1.15025; category: <em>VIF</em> = 1.15025).</p>
+</section>
+<section id="robust-standard-error-adjustment-1" class="level3">
+<h3 class="anchored" data-anchor-id="robust-standard-error-adjustment-1">Robust Standard Error Adjustment</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Robust standard error adjustment, to account for the heteroscedasticty</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>second_robust_se <span class="ot">&lt;-</span> <span class="fu">vcovHC</span>(second_linear_model, <span class="at">type =</span> <span class="st">"HC3"</span>)</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="fu">coeftest</span>(second_linear_model, <span class="at">vcov =</span> second_robust_se)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+t test of coefficients:
+
+                    Estimate Std. Error t value Pr(&gt;|t|)   
+(Intercept)         7.609828   2.769280  2.7479  0.00977 **
+area                0.093258   0.040199  2.3199  0.02688 * 
+categoryWorld Expo -0.542828   4.200765 -0.1292  0.89799   
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>The area is still a significant predictor (<em>p</em> = 0.02688) after accounting for heteroscedasticity, the category is still not a significant predictor (<em>p</em> = 0.89799).</p>
+</section>
+</section>
+<section id="model-comparison" class="level2">
+<h2 class="anchored" data-anchor-id="model-comparison">Model Comparison</h2>
+<section id="akaike-information-criterion-aic" class="level3">
+<h3 class="anchored" data-anchor-id="akaike-information-criterion-aic">Akaike Information Criterion (AIC)</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Akaike Information Criterion (AIC) for both models</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="fu">AIC</span>(linear_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 281.3254</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="fu">AIC</span>(second_linear_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 285.8238</code></pre>
+</div>
+</div>
+<p>According to the Akaike Information Criterion (AIC) values the first model (<em>AIC</em> = 281.3254) seems to have a slightly better balance between fit and simplicity compared to the second model (<em>AIC</em> = 285.8238).</p>
+</section>
+</section>
 <section id="conclusions" class="level2">
 <h2 class="anchored" data-anchor-id="conclusions">Conclusions</h2>
 <p>My analysis revealed that the area of a world’s fair is a significant predictor of visitor count, both in the initial model and after adjusting for heteroscedasticity. This suggests that larger fairs tend to attract more visitors. On the other hand, the cost and the number of attending countries, while initially hypothesized as influential factors, were not statistically significant in predicting visitor counts. This indicates that these variables do not have a directly meaningful connection to the number of visitors. Overall, my hypothesis only partially holds.</p>
-<p>The model explains approximately 56% of the variance in visitor counts, suggesting a moderately strong fit. However, the presence of heteroskedasticity, addressed through robust standard errors, highlights potential variability in the relationship between predictors and the response variable across different observations.</p>
+<p>The model explains approximately 56% of the variance in visitor counts, suggesting a moderately strong fit. However, the presence of heteroscedasticity, addressed through robust standard errors, highlights potential variability in the relationship between predictors and the response variable across different observations.</p>
+<p>In my further analysis, the category of the fair (either “World Expo” or “Specialised Expo”) seemed not have a significant influence on the visitor count, while the area of the fair still proved to be a significant predictor. This model explained only 47% of the variance in visitor counts, which is still considered a moderately strong fit. This second model showed a slightly worse balance between fit and complexity, according to this the first model seems to be the better one.</p>
 </section>
 
 </main>

@@ -139,9 +139,9 @@ In all three scatter plots, we can visible see a positive relationship. I used P
 
 ## Hypothesis
 
-After the exploratory analysis, my hypothesis is that **the visitor count of a world's fair is significantly influenced by the cost and area of the world's fair, and also by the number of attending countries at the fair**.
+My hypothesis is that **the visitor count of a world's fair is significantly influenced by the cost and area of the world's fair, and also by the number of attending countries at the fair**.
 
-## Model building
+## First Model building
 
 To test my hypothesis I created a linear regression model. My response variable  is the visitor count (*visitors*) and my predictor variables are the cost (*cost*), area of the fair (*area*) and the number of attending countries (*attending_countries*).
 
@@ -164,11 +164,11 @@ linear_model_stats$standardized_beta <- lm.beta(linear_model)$standardized.coeff
 linear_model_stats
 ```
 
-The linear model shows that only the area is a significant predictor for the visitor count (*p* = 0.000226). The cost (*p* = 0.09) and the number of attending countries (*p* = 0.74) are seemingly not significant predictors. According to the multiple R-squared (0.5608), approximately 56% of the variation in the dependent variable is explained by the model. The residual standard error is 12.4, and the overall model is statistically significant (*df* = 31, *adj. R-squared* = 0.5183, *F* = 13.19, *p* = 1.009e-05).
+The linear model shows that only the area is a significant predictor for the visitor count (*p* = 0.000226). The cost (*p* = 0.09) and the number of attending countries (*p* = 0.74) are seemingly not significant predictors. According to the multiple R-squared (0.5608), approximately 56% of the variation in the dependent variable is explained by the model. The residual standard error is 12.4, and the overall model is statistically significant (*dfs* = 3, 31, *adj. R-squared* = 0.5183, *F* = 13.19, *p* = 1.009e-05).
 
 The equation for the model: *visitors* = 6.928 + 0.00665 * *cost* + 0.07953 * *area* − 0.03734 * *attending_countries*
 
-## Model Diagnostics
+## First Model Diagnostics
 
 ### Checking for Influential Observations
 ```{r}
@@ -201,7 +201,7 @@ ggplot(data = linear_model_augmented, aes(x = .fitted, y = visitors)) +
   theme_minimal()
 ```
 
-In the plot we can see, that only 4 observations are considered inlfuential by their Cook's distance.
+In the plot we can see, that only 4 observations are considered influential by their Cook's distance.
 
 ### Normality Check
 
@@ -252,15 +252,147 @@ According to the results of the Variance Inflation Factor (VIF) analysis none of
 ### Robust Standard Error Adjustment
 
 ```{r}
-# Robust standard error adjustment, to account for the significant heteroscedasticty
+# Robust standard error adjustment, to account for the heteroscedasticty
 robust_se <- vcovHC(linear_model, type = "HC3")
 coeftest(linear_model, vcov = robust_se)
 ```
 
 The area is still a significant predictor (*p* = 0.04434) after accounting for heteroskedasticity, therefore it has a meaningful association with the visitor count, however the cost (*p* = 0.26262) and the number of attending countries (*p* = 0.81256) remained insignificant predictors.
 
+## Second Model Building 
+
+To further investigate, what could influence the visitor count, I created a second model, where the response variable is the visitor count (*visitors*) and the predictor variables are the area (*area*) and the category of the fair (*category*). The latter is a categorical dichotomous variable, which could be influential to the visitor count.
+
+```{r}
+# Building the second linear model for predicting the visitor count
+second_linear_model <- lm(visitors ~  area + category, data = data)
+
+summary(second_linear_model)
+
+# Tidy coefficients and add confidence intervals
+second_linear_model_stats <- tidy(second_linear_model) |>
+  mutate(
+    conf.low = confint(second_linear_model)[, 1],
+    conf.high = confint(second_linear_model)[, 2]
+  )
+
+# Getting standardized coefficients
+second_linear_model_stats$standardized_beta <- lm.beta(second_linear_model)$standardized.coefficients
+
+second_linear_model_stats
+```
+
+In this model the area is still the only significant predictor for the visitor count (*p* = 1.93e-05). The category as a predictor, does not seem to be significant (*p* = 0.929). The multiple R-squared (0.4712) shows that approximately 47% of the variation in the dependent variable is explained by the model. The residual standard error is 13.39, and the overall model is statistically significant (*dfs* = 2, 32, *adj. R-squared* = 0.4381, *F* = 14.26, *p* = 3.74e-05).
+
+The equation for the model: *visitors* = 7.60983 + 0.09326 * *area* - 0.54283 * *category(World Expo)*
+
+## Second Model Diagnostics
+
+### Checking for Influential Observations
+```{r}
+# Augmenting the model
+second_linear_model_augmented <- second_linear_model |>
+  augment() |>
+  mutate(dlc_id = data$dlc_id)
+
+# Setting the Cook's threshold
+second_cooks_threshold <- 4 / nrow(second_linear_model_augmented)
+
+# Getting the influential observations based on the Cook's distance
+second_influential_points <-second_linear_model_augmented |>
+  filter(.cooksd > second_cooks_threshold)
+second_influential_points
+
+# Plotting the complex model, highlighting the influential observations
+ggplot(data = second_linear_model_augmented, aes(x = .fitted, y = visitors)) +
+  geom_point(color = "green", shape = 21, fill = "green") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  geom_point(
+    data = second_influential_points, aes(x = .fitted, y = visitors), 
+    color = "black", shape = 21, fill = "black"
+  ) + 
+  labs(
+    title = "Regression plot for the second linear model with highlighted influential observations",
+    x = "Fitted Values",
+    y = "Visitors"
+  ) +
+  theme_minimal()
+```
+
+3 observations can be considered influential by their Cook's distance, as can be seen on the plot above.
+
+### Normality Check
+
+```{r}
+# Getting the residuals for the second linear model
+second_linear_model_residuals <- second_linear_model_augmented$.resid
+
+# Shapiro-Wilk test for normality check
+shapiro.test(second_linear_model_residuals)
+
+# Normal Q-Q plot for the second linear model
+qqnorm(second_linear_model_residuals, main = "Normal Q-Q plot for the second linear model residuals")
+
+# Histogram for the second linear model
+hist(second_linear_model_residuals, probability = TRUE, main = "Histogram of the second linear model residuals")
+curve(dnorm(x, mean = mean(second_linear_model_residuals), sd = sd(second_linear_model_residuals)), add = TRUE)
+```
+
+The Shapiro-Wilk test (*W* = 0.94531, *p* = 0.08131) were not significant for the residuals of the second linear model. This suggests that there is no significant deviation from the normal distribution. The normality assumption holds.
+
+### Linearity Check
+
+```{r}
+# RESET test for linearity check
+resettest(second_linear_model, power = 2:3)
+```
+
+The results of the Ramsey Regression Equation Specification Error Test (RESET) (*RESET* = 0.65252, *df1* = 2, *df2* = 30, *p* = 0.528) suggest that the linearity assumption holds for the model.
+
+### Homoscedasticty Check
+
+```{r}
+# Breusch-Pagan test for homoscedasticty check
+bptest(second_linear_model)
+```
+
+For checking the homoscedasticty assumption, I used a Breusch-Pagan test (*BP* = 12.238, *df* = 2, *p* = 0.002201). The result suggests that there is heteroscedasticty in the model. For this model as well, I used robust standard error adjustment, to account for the violation of the homoscedasticty assumption.
+
+### Multicollinearity Check
+
+```{r}
+# Variance Inflation Factors for multicollinearity check
+vif(second_linear_model)
+```
+
+The results of the Variance Inflation Factor (VIF) analysis show that none of the two variables have a concerning amount of multicollinearity, since all VIF values are less than 5 (area: *VIF* = 1.15025; category: *VIF* = 1.15025).
+
+### Robust Standard Error Adjustment
+
+```{r}
+# Robust standard error adjustment, to account for the heteroscedasticty
+second_robust_se <- vcovHC(second_linear_model, type = "HC3")
+coeftest(second_linear_model, vcov = second_robust_se)
+```
+
+The area is still a significant predictor (*p* = 0.02688) after accounting for heteroscedasticity, the category is still not a significant predictor (*p* = 0.89799).
+
+## Model Comparison
+
+### Akaike Information Criterion (AIC)
+
+```{r}
+# Akaike Information Criterion (AIC) for both models
+AIC(linear_model)
+AIC(second_linear_model)
+```
+
+According to the Akaike Information Criterion (AIC) values the first model (*AIC* = 281.3254) seems to have a slightly better balance between fit and simplicity compared to the second model (*AIC* = 285.8238).
+
 ## Conclusions
 
 My analysis revealed that the area of a world's fair is a significant predictor of visitor count, both in the initial model and after adjusting for heteroscedasticity. This suggests that larger fairs tend to attract more visitors. On the other hand, the cost and the number of attending countries, while initially hypothesized as influential factors, were not statistically significant in predicting visitor counts. This indicates that these variables do not have a directly meaningful connection to the number of visitors. Overall, my hypothesis only partially holds.
 
-The model explains approximately 56% of the variance in visitor counts, suggesting a moderately strong fit. However, the presence of heteroskedasticity, addressed through robust standard errors, highlights potential variability in the relationship between predictors and the response variable across different observations.
+The model explains approximately 56% of the variance in visitor counts, suggesting a moderately strong fit. However, the presence of heteroscedasticity, addressed through robust standard errors, highlights potential variability in the relationship between predictors and the response variable across different observations.
+
+In my further analysis, the category of the fair (either "World Expo" or "Specialised Expo") seemed not have a significant influence on the visitor count, while the area of the fair still proved to be a significant predictor. This model explained only 47% of the variance in visitor counts, which is still considered a moderately strong fit. This second model showed a slightly worse balance between fit and complexity, according to this the first model seems to be the better one.
