@@ -1,0 +1,266 @@
+---
+title: "Analysis of World Fairs: Visitor Count Predictions"
+author: "Donát Keszthelyi"
+format: html
+editor: visual
+execute:
+  echo: true
+  warning: false
+  message: false
+editor_options: 
+  chunk_output_type: console
+date: 12/15/2024
+---
+
+```{r}
+# Importing libraries
+library(tidyverse)
+library(skimr)
+library(lmtest)
+library(broom)
+library(car)
+library(sandwich)
+library(gridExtra)
+library(lm.beta)
+```
+
+```{r}
+# Reading the data
+data_raw <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/refs/heads/main/data/2024/2024-08-13/worlds_fairs.csv")
+```
+
+## Data Overview
+
+```{r}
+# View the first few rows of the raw dataset
+head(data_raw)
+
+# Summary of the raw dataset
+summary(data_raw)
+skim(data_raw)
+
+# Check for missing values
+colSums(is.na(data_raw))
+```
+
+The worlds_fairs.csv dataset contains data about world's fairs around the globe from the year 1851 up until 2022. In the exploratory data analysis (EDA) we see, that there are 6 character variables and 8 numeric variables in the dataset. We also see a quite a lot of missing values for multiple numeric variables. For further analysis the relevant numeric variables are: cost (*cost*), visitor count (*visitors*), area of the fair (*area*) and the number of attending countries (*attending_countries*).
+
+## Exploratory Plots
+
+```{r}
+# Grouping the data by country and calculating the total cost
+country_costs <- data_raw |>
+  group_by(country) |>
+  summarise(total_cost = sum(cost, na.rm = TRUE)) |>
+  arrange(desc(total_cost))
+
+country_costs
+
+# Plotting cost grouped by country
+plot_cost_by_country <- ggplot(country_costs, aes(x = reorder(country, total_cost), y = total_cost)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + 
+  labs(title = "Total Costs Grouped by Country", x = "Country", y = "Total Cost (in millions of USD)") +
+  theme_minimal()
+
+plot_cost_by_country
+
+# Grouping the data by country and calculating the total cost
+country_visitors <- data_raw |>
+  group_by(country) |>
+  summarise(total_visitors = sum(visitors, na.rm = TRUE)) |>
+  arrange(desc(total_visitors))
+
+country_visitors
+
+# Plotting cost grouped by country
+plot_visitors_by_country <- ggplot(country_visitors, aes(x = reorder(country, total_visitors), y = total_visitors)) +
+  geom_bar(stat = "identity", fill = "tomato") +
+  coord_flip() + 
+  labs(title = "Total Visitors Grouped by Country", x = "Country", y = "Total Visitors (in millions)") +
+  theme_minimal()
+
+plot_visitors_by_country
+```
+
+In the plots above, we see that total cost of world's fairs in China is the highest, with Germany and France following. The visitor counts show a different pattern: the US is leading by a significant margin, even though their total costs are only the fourth highest.
+
+## Data Cleaning
+
+```{r}
+# Filtering out rows, where a missing value can be found in a relevant column
+data <- data_raw |>
+  filter(
+    !is.na(data_raw$visitors),
+    !is.na(data_raw$cost),
+    !is.na(data_raw$area),
+    !is.na(data_raw$attending_countries)
+  )
+```
+
+## Correlations and Scatter Plots for Visualizing Relationships
+
+```{r}
+# Calculate correlations
+cor_cost_visitors <- cor(data$cost, data$visitors, method="pearson")
+cor_area_visitors <- cor(data$area, data$visitors, method="pearson")
+cor_countries_visitors <- cor(data$attending_countries, data$visitors, method="pearson")
+
+# Plotting visitors by cost
+plot_visitors_by_cost <- ggplot(data, aes(x = cost, y = visitors)) +
+  geom_point(color = "blue", size = 3) +
+  labs(title = "Visitors vs Cost", x = "Cost (in millions of USD)", y = "Visitors (in millions)") +
+  theme_minimal() +
+  annotate("text", x = max(data$cost) * 0.8, y = max(data$visitors) * 0.9, 
+           label = paste("r = ", round(cor_cost_visitors, 2)), color = "blue", size = 5)
+
+# Plotting visitors by area
+plot_visitors_by_area <- ggplot(data, aes(x = area, y = visitors)) +
+  geom_point(color = "darkgreen", size = 3) +
+  labs(title = "Visitors vs Area", x = "Area (in hectares)", y = "Visitors (in millions)") +
+  theme_minimal() +
+  annotate("text", x = max(data$area) * 0.8, y = max(data$visitors) * 0.9, 
+           label = paste("r = ", round(cor_area_visitors, 2)), color = "darkgreen", size = 5)
+
+# Plotting visitors by attending countries
+plot_visitors_by_attending_countries <- ggplot(data, aes(x = attending_countries, y = visitors)) +
+  geom_point(color = "red", size = 3) +
+  labs(title = "Visitors vs Number of Attending Countries", x = "Number of Attending Countries", y = "Visitors (in millions)") +
+  theme_minimal() +
+  annotate("text", x = max(data$attending_countries) * 0.8, y = max(data$visitors) * 0.9, 
+           label = paste("r = ", round(cor_countries_visitors, 2)), color = "red", size = 5)
+
+# Arrange the plots in a grid
+grid.arrange(plot_visitors_by_cost, plot_visitors_by_area, plot_visitors_by_attending_countries, 
+             ncol = 2, nrow = 2)
+```
+
+In all three scatter plots, we can visible see a positive relationship. I used Pearson's correlation to explore the strength of these relationships, their coefficients can be seen on the plots as well.
+
+## Hypothesis
+
+After the exploratory analysis, my hypothesis is that **the visitor count of a world's fair is significantly influenced by the cost and area of the world's fair, and also by the number of attending countries at the fair**.
+
+## Model building
+
+To test my hypothesis I created a linear regression model. My response variable  is the visitor count (*visitors*) and my predictor variables are the cost (*cost*), area of the fair (*area*) and the number of attending countries (*attending_countries*).
+
+```{r}
+# Building the linear model for predicting the visitor count
+linear_model <- lm(visitors ~  cost + area + attending_countries, data = data)
+
+summary(linear_model)
+
+# Tidy coefficients and add confidence intervals
+linear_model_stats <- tidy(linear_model) |>
+  mutate(
+    conf.low = confint(linear_model)[, 1],
+    conf.high = confint(linear_model)[, 2]
+  )
+
+# Getting standardized coefficients
+linear_model_stats$standardized_beta <- lm.beta(linear_model)$standardized.coefficients
+
+linear_model_stats
+```
+
+The linear model shows that only the area is a significant predictor for the visitor count (*p* = 0.000226). The cost (*p* = 0.09) and the number of attending countries (*p* = 0.74) are seemingly not significant predictors. According to the multiple R-squared (0.5608), approximately 56% of the variation in the dependent variable is explained by the model. The residual standard error is 12.4, and the overall model is statistically significant (*df* = 31, *adj. R-squared* = 0.5183, *F* = 13.19, *p* = 1.009e-05).
+
+The equation for the model: *visitors* = 6.928 + 0.00665 * *cost* + 0.07953 * *area* − 0.03734 * *attending_countries*
+
+## Model Diagnostics
+
+### Checking for Influential Observations
+```{r}
+# Augmenting the model
+linear_model_augmented <- linear_model |>
+  augment() |>
+  mutate(dlc_id = data$dlc_id)
+
+# Setting the Cook's threshold
+cooks_threshold <- 4 / nrow(linear_model_augmented)
+
+# Getting the influential observations based on the Cook's distance
+influential_points <-linear_model_augmented |>
+  filter(.cooksd > cooks_threshold)
+influential_points
+
+# Plotting the complex model, highlighting the influential observations
+ggplot(data = linear_model_augmented, aes(x = .fitted, y = visitors)) +
+  geom_point(color = "orange", shape = 21, fill = "orange") +
+  geom_smooth(method = "lm", color = "red", se = FALSE) +
+  geom_point(
+    data = influential_points, aes(x = .fitted, y = visitors), 
+    color = "black", shape = 21, fill = "black"
+  ) + 
+  labs(
+    title = "Regression plot for the linear model with highlighted influential observations",
+    x = "Fitted Values",
+    y = "Visitors"
+  ) +
+  theme_minimal()
+```
+
+In the plot we can see, that only 4 observations are considered inlfuential by their Cook's distance.
+
+### Normality Check
+
+```{r}
+# Getting the residuals for the linear model
+linear_model_residuals <- linear_model_augmented$.resid
+
+# Shapiro-Wilk test for normality check
+shapiro.test(linear_model_residuals)
+
+# Normal Q-Q plot for the linear model
+qqnorm(linear_model_residuals, main = "Normal Q-Q plot for the linear model residuals")
+
+# Histogram for the linear model
+hist(linear_model_residuals, probability = TRUE, main = "Histogram of the linear model residuals")
+curve(dnorm(x, mean = mean(linear_model_residuals), sd = sd(linear_model_residuals)), add = TRUE)
+```
+
+The insignificant result of the Shapiro-Wilk test (*W* = 0.95677, *p* = 0.1826) on the residuals of the linear model suggest that there they do not deviate significantly from the normal distribution.
+
+### Linearity Check
+
+```{r}
+# RESET test for linearity check
+resettest(linear_model, power = 2:3)
+```
+
+According to the results of the Ramsey Regression Equation Specification Error Test (RESET) (*RESET* = 1.178, *df1* = 2, *df2* = 29, *p* = 0.3222) there is no significant sign of misspecification, therefore the linearity assumption holds for the model.
+
+### Homoscedasticty Check
+
+```{r}
+# Breusch-Pagan test for homoscedasticty check
+bptest(linear_model)
+```
+
+The result of the Breusch-Pagan test (*BP* = 10.697, *df* = 3, *p* = 0.01348) suggest that there is significant evidence for heteroscedasticty in the model, so the homoscedasticty is violated. To account for this, later I apply robust standard error estimation.
+
+### Multicollinearity Check
+
+```{r}
+# Variance Inflation Factors for multicollinearity check
+vif(linear_model)
+```
+
+According to the results of the Variance Inflation Factor (VIF) analysis none of the variables show a concerning degree of multicollinearity, since all VIF values are less than 5 (cost: *VIF* = 3.245635; area: *VIF* = 1.407660; attending_countries: *VIF* = 3.874476).
+
+### Robust Standard Error Adjustment
+
+```{r}
+# Robust standard error adjustment, to account for the significant heteroscedasticty
+robust_se <- vcovHC(linear_model, type = "HC3")
+coeftest(linear_model, vcov = robust_se)
+```
+
+The area is still a significant predictor (*p* = 0.04434) after accounting for heteroskedasticity, therefore it has a meaningful association with the visitor count, however the cost (*p* = 0.26262) and the number of attending countries (*p* = 0.81256) remained insignificant predictors.
+
+## Conclusions
+
+My analysis revealed that the area of a world's fair is a significant predictor of visitor count, both in the initial model and after adjusting for heteroscedasticity. This suggests that larger fairs tend to attract more visitors. On the other hand, the cost and the number of attending countries, while initially hypothesized as influential factors, were not statistically significant in predicting visitor counts. This indicates that these variables do not have a directly meaningful connection to the number of visitors. Overall, my hypothesis only partially holds.
+
+The model explains approximately 56% of the variance in visitor counts, suggesting a moderately strong fit. However, the presence of heteroskedasticity, addressed through robust standard errors, highlights potential variability in the relationship between predictors and the response variable across different observations.
